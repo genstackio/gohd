@@ -20,23 +20,23 @@ func UpdateAndRedirect(w http.ResponseWriter, req *http.Request, worker func(*ht
 		url, _ = createErrorUrl(10210, err, locale)
 	}
 	w.Header().Set("Location", url)
-	w.WriteHeader(302)
+	w.WriteHeader(http.StatusFound)
 }
 
 //goland:noinspection GoUnusedExportedFunction
 func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
 	if nil != err {
-		JSONError(w, err, 404)
+		JSONError(w, err, http.StatusNotFound)
 		return
 	}
 	body, err := json.Marshal(result)
 	if nil != err {
-		JSONError(w, err, 500)
+		JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(body)
 	if nil != err {
 		log.Println(err.Error())
@@ -47,20 +47,37 @@ func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Re
 func CreateAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
 	if nil != err {
-		JSONError(w, err, 500)
+		JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 	body, err := json.Marshal(result)
 	if nil != err {
-		JSONError(w, err, 500)
+		JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	w.WriteHeader(201)
+	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(body)
 	if nil != err {
 		log.Println(err.Error())
 	}
+}
+
+func ParseThenCreateAndReturn(w http.ResponseWriter, req *http.Request, init func(*http.Request) (interface{}, error), worker func(interface{}, *http.Request) (interface{}, error)) {
+	data, err := init(req)
+	if err != nil {
+		JSONError(w, err, http.StatusBadRequest)
+		return
+	}
+	err = json.NewDecoder(req.Body).Decode(data)
+	if err != nil {
+		JSONError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	CreateAndReturn(w, req, func(r *http.Request) (interface{}, error) {
+		return worker(data, req)
+	})
 }
 
 //goland:noinspection GoUnusedExportedFunction
@@ -69,7 +86,7 @@ func PushEventToBackend(w http.ResponseWriter, req *http.Request, uriPrefix stri
 	if err != nil {
 		log.Printf("Error reading request body : %s", err.Error())
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(412)
+		w.WriteHeader(http.StatusPreconditionFailed)
 		return
 	}
 	for i := 0; i < len(backends); i++ {
@@ -103,7 +120,7 @@ func PushEventToBackend(w http.ResponseWriter, req *http.Request, uriPrefix stri
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				log.Printf("Error reading response body : %s", err.Error())
-				w.WriteHeader(500)
+				w.WriteHeader(http.StatusInternalServerError)
 				break
 			}
 			for key, values := range resp.Header {
