@@ -116,6 +116,5 @@ func JSONError(w http.ResponseWriter, err interface{}, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	erro, _ := json.Marshal(err)
-	_, _ = w.Write(erro)
+	json.NewEncoder(w).Encode(err)
 }
