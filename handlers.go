@@ -24,23 +24,35 @@ func UpdateAndRedirect(w http.ResponseWriter, req *http.Request, worker func(*ht
 }
 
 //goland:noinspection GoUnusedExportedFunction
-func CreateAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
+func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
 	if nil != err {
-		w.WriteHeader(500)
-		_, err = w.Write([]byte(err.Error()))
-		if nil != err {
-			log.Println(err.Error())
-		}
+		JSONError(w, err, 500)
 		return
 	}
 	body, err := json.Marshal(result)
 	if nil != err {
-		w.WriteHeader(500)
-		_, err = w.Write([]byte(err.Error()))
-		if nil != err {
-			log.Println(err.Error())
-		}
+		JSONError(w, err, 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	w.WriteHeader(200)
+	_, err = w.Write(body)
+	if nil != err {
+		log.Println(err.Error())
+	}
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func CreateAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
+	result, err := worker(req)
+	if nil != err {
+		JSONError(w, err, 500)
+		return
+	}
+	body, err := json.Marshal(result)
+	if nil != err {
+		JSONError(w, err, 500)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
