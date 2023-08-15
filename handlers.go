@@ -110,3 +110,12 @@ func PushEventToBackend(w http.ResponseWriter, req *http.Request, uriPrefix stri
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(noBackendsStatusCode)
 }
+
+//goland:noinspection GoUnusedExportedFunction
+func JSONError(w http.ResponseWriter, err interface{}, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	erro, _ := json.Marshal(err)
+	_, _ = w.Write(erro)
+}
