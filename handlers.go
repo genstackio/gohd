@@ -27,7 +27,7 @@ func UpdateAndRedirect(w http.ResponseWriter, req *http.Request, worker func(*ht
 func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
 	if nil != err {
-		JSONError(w, err, 500)
+		JSONError(w, err, 404)
 		return
 	}
 	body, err := json.Marshal(result)
