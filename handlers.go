@@ -29,19 +29,20 @@ func UpdateAndRedirect(w http.ResponseWriter, req *http.Request, worker func(*ht
 func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
 	if nil != err {
-		JSONError(w, err, http.StatusNotFound)
+		goerror.WriteError(w, err)
 		return
 	}
 	body, err := json.Marshal(result)
 	if nil != err {
-		JSONError(w, err, http.StatusInternalServerError)
+		goerror.WriteError(w, errors.MarshallError{Err: err})
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(body)
 	if nil != err {
-		log.Println(err.Error())
+		goerror.WriteError(w, errors.WriteError{Err: err})
+		return
 	}
 }
 
