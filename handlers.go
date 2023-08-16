@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/genstackio/goerror"
+	"github.com/genstackio/goerror/errors"
 	"io"
 	"log"
 	"net/http"
@@ -46,20 +48,20 @@ func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Re
 //goland:noinspection GoUnusedExportedFunction
 func CreateAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
 	result, err := worker(req)
-	if nil != err {
-		JSONError(w, err, http.StatusInternalServerError)
+	if err != nil {
+		goerror.WriteError(w, err)
 		return
 	}
 	body, err := json.Marshal(result)
 	if nil != err {
-		JSONError(w, err, http.StatusInternalServerError)
+		goerror.WriteError(w, errors.MarshallError{Err: err})
 		return
 	}
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(body)
 	if nil != err {
-		log.Println(err.Error())
+		goerror.WriteError(w, errors.WriteError{Err: err})
 	}
 }
 
@@ -83,15 +85,18 @@ func ProcessAndReturn(w http.ResponseWriter, req *http.Request, worker func(*htt
 	}
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func ParseThenCreateAndReturn(w http.ResponseWriter, req *http.Request, init func(*http.Request) (interface{}, error), worker func(interface{}, *http.Request) (interface{}, error)) {
 	data, err := init(req)
+
 	if err != nil {
 		JSONError(w, err, http.StatusBadRequest)
 		return
 	}
+
 	err = json.NewDecoder(req.Body).Decode(data)
 	if err != nil {
-		JSONError(w, err, http.StatusBadRequest)
+		goerror.WriteError(w, errors.MalformedPayloadError{Err: err})
 		return
 	}
 
