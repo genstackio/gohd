@@ -63,6 +63,26 @@ func CreateAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http
 	}
 }
 
+//goland:noinspection GoUnusedExportedFunction
+func ProcessAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
+	result, err := worker(req)
+	if nil != err {
+		JSONError(w, err, http.StatusInternalServerError)
+		return
+	}
+	body, err := json.Marshal(result)
+	if nil != err {
+		JSONError(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(body)
+	if nil != err {
+		log.Println(err.Error())
+	}
+}
+
 func ParseThenCreateAndReturn(w http.ResponseWriter, req *http.Request, init func(*http.Request) (interface{}, error), worker func(interface{}, *http.Request) (interface{}, error)) {
 	data, err := init(req)
 	if err != nil {
@@ -76,6 +96,24 @@ func ParseThenCreateAndReturn(w http.ResponseWriter, req *http.Request, init fun
 	}
 
 	CreateAndReturn(w, req, func(r *http.Request) (interface{}, error) {
+		return worker(data, req)
+	})
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func ParseThenProcessAndReturn(w http.ResponseWriter, req *http.Request, init func(*http.Request) (interface{}, error), worker func(interface{}, *http.Request) (interface{}, error)) {
+	data, err := init(req)
+	if err != nil {
+		JSONError(w, err, http.StatusBadRequest)
+		return
+	}
+	err = json.NewDecoder(req.Body).Decode(data)
+	if err != nil {
+		JSONError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	ProcessAndReturn(w, req, func(r *http.Request) (interface{}, error) {
 		return worker(data, req)
 	})
 }
