@@ -8,7 +8,7 @@ import (
 )
 
 //goland:noinspection GoUnusedExportedFunction
-func GetAndReturn(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (interface{}, error)) {
+func GetAndReturn[T interface{}](w http.ResponseWriter, req *http.Request, worker func(*http.Request) (T, error)) {
 	result, err := worker(req)
 	if nil != err {
 		goerror.WriteError(w, err)

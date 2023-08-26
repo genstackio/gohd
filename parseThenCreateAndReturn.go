@@ -8,7 +8,7 @@ import (
 )
 
 //goland:noinspection GoUnusedExportedFunction
-func ParseThenCreateAndReturn(w http.ResponseWriter, req *http.Request, init func(*http.Request) (interface{}, error), worker func(interface{}, *http.Request) (interface{}, error)) {
+func ParseThenCreateAndReturn[T interface{}, V interface{}](w http.ResponseWriter, req *http.Request, init func(*http.Request) (T, error), worker func(T, *http.Request) (V, error)) {
 	data, err := init(req)
 
 	if err != nil {

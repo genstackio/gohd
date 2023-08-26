@@ -8,14 +8,14 @@ import (
 )
 
 //goland:noinspection GoUnusedExportedFunction
-func ParseBytesThenGenerateAndStream(w http.ResponseWriter, req *http.Request, init func(*http.Request) ([]byte, interface{}, error), worker func(interface{}, http.ResponseWriter, *http.Request) error) {
+func ParseBytesThenGenerateAndStream[T interface{}](w http.ResponseWriter, req *http.Request, init func(*http.Request) ([]byte, T, error), worker func(interface{}, http.ResponseWriter, *http.Request) error) {
 	bytes, data, err := init(req)
 	if err != nil {
 		JSONError(w, err, http.StatusBadRequest)
 		return
 	}
 	err = json.Unmarshal(bytes, data)
-	
+
 	if err != nil {
 		goerror.WriteError(w, errors.MalformedPayloadError{Err: err})
 		return
