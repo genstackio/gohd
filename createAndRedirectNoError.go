@@ -10,12 +10,18 @@ func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker f
 	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
 		url, ttl, err, lang := worker(request)
 		if err != nil {
-			url, _ := errorUrlFactory(10104, err, lang)
-			return url, 0, err
+			url, err2 := errorUrlFactory(10104, err, lang)
+			if err2 != nil {
+				return "", 0, err2
+			}
+			return url, 0, nil
 		}
 		if len(url) == 0 {
-			url, _ = errorUrlFactory(10106, baseErrors.New("empty payment url"), lang)
-			return url, 0, err
+			url, err = errorUrlFactory(10106, baseErrors.New("empty payment url"), lang)
+			if err != nil {
+				return "", 0, err
+			}
+			return url, 0, nil
 		}
 		return url, ttl, nil
 	})
