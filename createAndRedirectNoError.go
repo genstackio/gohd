@@ -5,23 +5,48 @@ import (
 	"net/http"
 )
 
-//goland:noinspection GoUnusedExportedFunction
-func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker func(*http.Request) (string, int, error, string), errorUrlFactory func(code int, err error, lang string) (string, error)) {
-	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
-		url, ttl, err, lang := worker(request)
-		if err != nil {
-			url, err2 := errorUrlFactory(10104, err, lang)
-			if err2 != nil {
-				return "", 0, err2
-			}
-			return url, 0, nil
+type workerFn func(*http.Request) (string, int, error, string)
+type errorUrlFactoryFn func(code int, err error, lang string) (string, error)
+
+func process(request *http.Request, worker workerFn, errorUrlFactory errorUrlFactoryFn) (string, int, error, error, string) {
+	url, ttl, err, lang := worker(request)
+	if err != nil {
+		url, err2 := errorUrlFactory(10104, err, lang)
+		if err2 != nil {
+			return "", 0, err2, err2, lang
 		}
-		if len(url) == 0 {
-			url, err = errorUrlFactory(10106, baseErrors.New("empty payment url"), lang)
-			if err != nil {
-				return "", 0, err
-			}
-			return url, 0, nil
+		return url, 0, nil, err, lang
+	}
+	if len(url) == 0 {
+		err0 := baseErrors.New("empty payment url")
+		url, err = errorUrlFactory(10106, err0, lang)
+		if err != nil {
+			return "", 0, err, err, lang
+		}
+		return url, 0, nil, err0, lang
+	}
+	return url, ttl, nil, nil, lang
+
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker workerFn, errorUrlFactory errorUrlFactoryFn) {
+	if req.URL.Query().Has("noredirect") {
+		CreateAndReturn(w, req, func(request *http.Request) (interface{}, error) {
+			url, ttl, err, originalErr, lang := process(request, worker, errorUrlFactory)
+			return struct {
+				Url           string
+				Ttl           int
+				Error         error
+				OriginalError error
+				Lang          string
+			}{Url: url, Ttl: ttl, Error: err, OriginalError: originalErr, Lang: lang}, err
+		})
+	}
+	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
+		url, ttl, err, _, _ := process(request, worker, errorUrlFactory)
+		if err != nil {
+			return "", 0, err
 		}
 		return url, ttl, nil
 	})
