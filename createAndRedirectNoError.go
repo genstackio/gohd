@@ -46,7 +46,7 @@ func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker w
 				joriginalErr := goerror.FormatJsonErrorResponse(originalErr)
 				joriginalErrp = &joriginalErr
 			}
-			return DebugNoRedirectResponse{Url: url, Ttl: ttl, Error: joriginalErrp, UrlFactoryError: jerrp, Lang: lang}, err
+			return DebugNoRedirectResponse{Url: url, Ttl: ttl, Error: joriginalErrp, UrlFactoryError: jerrp, Lang: lang}, nil
 		})
 	}
 	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {

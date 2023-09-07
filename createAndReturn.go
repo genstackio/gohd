@@ -22,7 +22,10 @@ func CreateAndReturn[T interface{}](w http.ResponseWriter, req *http.Request, wo
 	statusCode := http.StatusCreated
 	contentType := "application/json;charset=utf-8"
 	if z, ok := any(result).(ResponseCompatible); ok {
-		statusCode = z.GetStatusCode()
+		forcedStatusCode := z.GetStatusCode()
+		if forcedStatusCode != 0 {
+			statusCode = forcedStatusCode
+		}
 		forcedContentType := z.GetContentType()
 		if "" != forcedContentType {
 			contentType = forcedContentType

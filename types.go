@@ -16,7 +16,13 @@ type DebugNoRedirectResponse struct {
 }
 
 func (r DebugNoRedirectResponse) GetStatusCode() int {
-	return r.Error.StatusCode
+	if r.UrlFactoryError != nil {
+		return r.UrlFactoryError.StatusCode
+	}
+	if r.Error != nil {
+		return r.Error.StatusCode
+	}
+	return 0
 }
 
 func (r DebugNoRedirectResponse) GetContentType() string {
