@@ -1,2 +1,4 @@
 github.com/genstackio/goerror v0.0.2 h1:loYvPvGNjeahMiCzCdmNtJB3k7RYfqJ6rW5jEW0kJVo=
 github.com/genstackio/goerror v0.0.2/go.mod h1:e9bBP/eWoiS9qOtHIbJobCLow9+FSjvQ2VbghSY7poc=
+github.com/genstackio/goerror v0.0.10 h1:vTcj6QS/3HXAFdBugonmegGsfI63fTzEn7X9FwCl88Q=
+github.com/genstackio/goerror v0.0.10/go.mod h1:e9bBP/eWoiS9qOtHIbJobCLow9+FSjvQ2VbghSY7poc=

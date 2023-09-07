@@ -2,6 +2,8 @@ package gohd
 
 import (
 	baseErrors "errors"
+	"github.com/genstackio/goerror"
+	"github.com/genstackio/goerror/errors"
 	"net/http"
 )
 
@@ -34,13 +36,23 @@ func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker w
 	if req.URL.Query().Has("noredirect") {
 		CreateAndReturn(w, req, func(request *http.Request) (interface{}, error) {
 			url, ttl, err, originalErr, lang := process(request, worker, errorUrlFactory)
+			var jerrp *errors.JsonErrorResponse
+			if nil != err {
+				jerr := goerror.FormatJsonErrorResponse(err)
+				jerrp = &jerr
+			}
+			var joriginalErrp *errors.JsonErrorResponse
+			if nil != originalErr {
+				joriginalErr := goerror.FormatJsonErrorResponse(originalErr)
+				joriginalErrp = &joriginalErr
+			}
 			return struct {
-				Url           string `json:"url,omitempty"`
-				Ttl           int    `json:"ttl,omitempty"`
-				Error         error  `json:"error,omitempty"`
-				OriginalError error  `json:"originalError,omitempty"`
-				Lang          string `json:"lang,omitempty"`
-			}{Url: url, Ttl: ttl, Error: err, OriginalError: originalErr, Lang: lang}, err
+				Url           string                    `json:"url,omitempty"`
+				Ttl           int                       `json:"ttl,omitempty"`
+				Error         *errors.JsonErrorResponse `json:"error,omitempty"`
+				OriginalError *errors.JsonErrorResponse `json:"originalError,omitempty"`
+				Lang          string                    `json:"lang,omitempty"`
+			}{Url: url, Ttl: ttl, Error: jerrp, OriginalError: joriginalErrp, Lang: lang}, err
 		})
 	}
 	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
