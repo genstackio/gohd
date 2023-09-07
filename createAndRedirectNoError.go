@@ -35,11 +35,11 @@ func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker w
 		CreateAndReturn(w, req, func(request *http.Request) (interface{}, error) {
 			url, ttl, err, originalErr, lang := process(request, worker, errorUrlFactory)
 			return struct {
-				Url           string
-				Ttl           int
-				Error         error
-				OriginalError error
-				Lang          string
+				Url           string `json:"url,omitempty"`
+				Ttl           int    `json:"ttl,omitempty"`
+				Error         error  `json:"error,omitempty"`
+				OriginalError error  `json:"originalError,omitempty"`
+				Lang          string `json:"lang,omitempty"`
 			}{Url: url, Ttl: ttl, Error: err, OriginalError: originalErr, Lang: lang}, err
 		})
 	}
