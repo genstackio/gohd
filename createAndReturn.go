@@ -19,8 +19,17 @@ func CreateAndReturn[T interface{}](w http.ResponseWriter, req *http.Request, wo
 		goerror.WriteError(w, errors.MarshallError{Err: err})
 		return
 	}
-	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	statusCode := http.StatusCreated
+	contentType := "application/json;charset=utf-8"
+	if z, ok := any(result).(ResponseCompatible); ok {
+		statusCode = z.GetStatusCode()
+		forcedContentType := z.GetContentType()
+		if "" != forcedContentType {
+			contentType = forcedContentType
+		}
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(statusCode)
 	_, err = w.Write(body)
 	if nil != err {
 		goerror.WriteError(w, errors.WriteError{Err: err})
