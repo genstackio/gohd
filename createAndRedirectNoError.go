@@ -20,7 +20,7 @@ func process(request *http.Request, worker workerFn, errorUrlFactory errorUrlFac
 		return url, 0, nil, err, lang
 	}
 	if len(url) == 0 {
-		err0 := baseErrors.New("empty payment url")
+		err0 := baseErrors.New("empty redirect url")
 		url, err = errorUrlFactory(10106, err0, lang)
 		if err != nil {
 			return "", 0, err, err, lang
