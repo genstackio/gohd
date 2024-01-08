@@ -1,0 +1,15 @@
+package gohd
+
+import (
+	"github.com/genstackio/goerror"
+	"net/http"
+)
+
+//goland:noinspection GoUnusedExportedFunction
+func GetAndStream(w http.ResponseWriter, req *http.Request, worker func(http.ResponseWriter, *http.Request) error) {
+	err := worker(w, req)
+	if nil != err {
+		goerror.WriteError(w, err)
+		return
+	}
+}
