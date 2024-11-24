@@ -7,10 +7,10 @@ import (
 	"net/http"
 )
 
-type workerFn func(*http.Request) (string, int, error, string)
-type errorUrlFactoryFn func(code int, err error, lang string) (string, error)
+type workerFn2 func(*http.Request) (string, int, error, string)
+type errorUrlFactoryFn2 func(code int, err error, lang string) (string, error)
 
-func process(request *http.Request, worker workerFn, errorUrlFactory errorUrlFactoryFn) (string, int, error, error, string) {
+func process2(request *http.Request, worker workerFn2, errorUrlFactory errorUrlFactoryFn2) (string, int, error, error, string) {
 	url, ttl, err, lang := worker(request)
 	if err != nil {
 		url, err2 := errorUrlFactory(10104, err, lang)
@@ -31,10 +31,10 @@ func process(request *http.Request, worker workerFn, errorUrlFactory errorUrlFac
 }
 
 //goland:noinspection GoUnusedExportedFunction
-func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker workerFn, errorUrlFactory errorUrlFactoryFn) {
+func UpdateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker workerFn2, errorUrlFactory errorUrlFactoryFn2) {
 	if req.URL.Query().Has("noredirect") {
-		CreateAndReturn(w, req, func(request *http.Request) (interface{}, error) {
-			url, ttl, err, originalErr, lang := process(request, worker, errorUrlFactory)
+		UpdateAndReturn(w, req, func(request *http.Request) (interface{}, error) {
+			url, ttl, err, originalErr, lang := process2(request, worker, errorUrlFactory)
 			var jerrp *errors.JsonErrorResponse
 			if nil != err {
 				jerr := goerror.FormatJsonErrorResponse(err)
@@ -49,8 +49,8 @@ func CreateAndRedirectNoError(w http.ResponseWriter, req *http.Request, worker w
 		})
 		return
 	}
-	CreateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
-		url, ttl, err, _, _ := process(request, worker, errorUrlFactory)
+	UpdateAndRedirect(w, req, func(request *http.Request) (string, int, error) {
+		url, ttl, err, _, _ := process2(request, worker, errorUrlFactory)
 		if err != nil {
 			return "", 0, err
 		}
